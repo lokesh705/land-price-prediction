@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏡 Land Price Prediction</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* ===== Base Styles ===== */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #1a2980, #26d0ce);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      color:#fff;
+    }
+    .container {
+      background: rgba(255,255,255,0.12);
+      padding: 2rem 2.5rem;
+      border-radius:25px;
+      backdrop-filter: blur(15px);
+      width: 100%;
+      max-width: 550px;
+      box-shadow:0 15px 40px rgba(0,0,0,0.3);
+      animation: fadeIn 1s ease forwards;
+    }
+    @keyframes fadeIn {
+      from {opacity:0; transform: translateY(-20px);}
+      to {opacity:1; transform: translateY(0);}
+    }
+    h1 {
+      text-align:center;
+      font-size:2rem;
+      margin-bottom:1.8rem;
+      color: #ffeb3b;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+    }
+
+    /* ===== Form Styles ===== */
+    form { display:flex; flex-direction:column; gap:1.2rem; }
+    label { font-weight:600; margin-bottom:0.3rem; }
+    input {
+      width:100%;
+      padding:0.8rem 1rem;
+      border-radius:12px;
+      border:none;
+      font-size:1rem;
+      outline:none;
+      transition: all 0.3s ease;
+    }
+    input:focus {
+      box-shadow:0 0 12px #ffeb3b;
+      transform: scale(1.02);
+    }
+    button {
+      padding:0.9rem;
+      border:none;
+      border-radius:15px;
+      font-size:1.15rem;
+      font-weight:600;
+      cursor:pointer;
+      background: linear-gradient(135deg,#ffeb3b,#ffc107);
+      color:#333;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow:0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    /* ===== Result Styles ===== */
+    .result {
+      margin-top:1.5rem;
+      padding:1.2rem;
+      border-radius:15px;
+      background: rgba(255,255,255,0.18);
+      font-size:1.3rem;
+      text-align:center;
+      animation: popIn 0.5s ease forwards;
+      display:none;
+    }
+    @keyframes popIn {
+      from {opacity:0; transform: scale(0.8);}
+      to {opacity:1; transform: scale(1);}
+    }
+
+    #newSearchBtn {
+      display:none;
+      margin:1rem auto 0 auto;
+      padding:0.8rem 1.5rem;
+      font-size:1rem;
+      border:none;
+      border-radius:12px;
+      background:#ffeb3b;
+      color:#333;
+      cursor:pointer;
+      font-weight:600;
+      transition:all 0.3s ease;
+    }
+    #newSearchBtn:hover {
+      transform: translateY(-2px);
+      box-shadow:0 6px 15px rgba(0,0,0,0.3);
+    }
+
+    footer {
+      margin-top:1.5rem;
+      text-align:center;
+      font-size:0.85rem;
+      opacity:0.8;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width:600px){
+      .container { padding:1.5rem; }
+      h1 { font-size:1.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏡 Land Price Prediction</h1>
+
+    <form id="predictionForm" method="POST" action="/predict">
+      <label>CRIM (Crime rate per capita)</label>
+      <input type="number" step="any" name="CRIM" min="0" max="100" placeholder="e.g., 0.2" required>
+
+      <label>RM (Average rooms per dwelling)</label>
+      <input type="number" step="any" name="RM" min="1" max="15" placeholder="e.g., 6.5" required>
+
+      <label>TAX (Property tax per $10k)</label>
+      <input type="number" step="any" name="TAX" min="100" max="1000" placeholder="e.g., 300" required>
+
+      <label>LSTAT (% lower status population)</label>
+      <input type="number" step="any" name="LSTAT" min="0" max="50" placeholder="e.g., 12" required>
+
+      <button type="submit">Predict Price</button>
+    </form>
+
+    <div class="result" id="resultBox"></div>
+    <button id="newSearchBtn">New Search</button>
+
+    <footer>⚡ Powered by Flask + RandomForest Model</footer>
+  </div>
+
+  <script>
+    const form = document.getElementById('predictionForm');
+    const resultBox = document.getElementById('resultBox');
+    const newBtn = document.getElementById('newSearchBtn');
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      resultBox.style.display='block';
+      resultBox.innerHTML = "🔄 Predicting...";
+      
+      const formData = {
+        CRIM: document.querySelector('input[name="CRIM"]').value,
+        RM: document.querySelector('input[name="RM"]').value,
+        TAX: document.querySelector('input[name="TAX"]').value,
+        LSTAT: document.querySelector('input[name="LSTAT"]').value
+      };
+
+      try {
+        const response = await fetch('/predict',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(formData)
+        });
+        const data = await response.json();
+        if(data.price){
+          resultBox.innerHTML = `💰 Predicted Land Price: $${data.price.toLocaleString()}`;
+          newBtn.style.display='block';
+        } else if(data.error){
+          resultBox.innerHTML = `❌ Error: ${data.error}`;
+        }
+      } catch(err){
+        resultBox.innerHTML = "❌ Something went wrong!";
+      }
+    });
+
+    newBtn.addEventListener('click', ()=>{
+      form.reset();
+      resultBox.style.display='none';
+      newBtn.style.display='none';
+    });
+  </script>
+</body>
+</html>
