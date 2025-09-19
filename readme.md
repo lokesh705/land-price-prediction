@@ -139,7 +139,7 @@ This project is **open-source** and free to use for educational purposes.
 
 ## ⚡ Author
 
-Your Name
+Lokesh
 
 ```
 
@@ -149,3 +149,4 @@ If you want, I can also **create a ready-to-use `requirements.txt`** and include
 
 Do you want me to do that next?
 ```
+
